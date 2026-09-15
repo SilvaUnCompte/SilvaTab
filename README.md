@@ -2,11 +2,15 @@
 
 Minimalist kanban board (TODO / On doing / Done) with a built-in **MCP server** so Claude can read and manage tasks.
 
+<img src="img/kanban.png" width="500">
+
 - Projects list on the left, kanban board on the right, drag & drop between columns
 - Tasks have a title, a Markdown description, **tags** and a list of **blocking tasks** (cycles are rejected, blocked cards get a red marker)
 - Tags belong to a project: created on the fly from the task dialog, renamed / recolored / deleted from the "N tags" button of the board header
 - No accounts: a single instance password for the UI, a separate token for MCP
 - One container + MongoDB
+
+<img src="img/edit.png" width="500">
 
 ## Stack
 

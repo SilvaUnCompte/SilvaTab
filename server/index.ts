@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import Fastify from "fastify";
+import Fastify, { type FastifyRequest } from "fastify";
 import { ZodError, z } from "zod";
 import { cookieSecret } from "./auth.js";
 import { config } from "./config.js";
@@ -36,8 +36,11 @@ await app.register(mcpRoutes, { prefix: "/mcp", services, token: config.mcpToken
 // Serve the built SPA when present (production); in dev Vite serves it.
 if (existsSync(config.webDir)) {
   await app.register(fastifyStatic, { root: config.webDir });
+  // Only browser navigations get the SPA: probes such as /.well-known/oauth-* (MCP clients) must receive a real 404.
+  const isPageRequest = (req: FastifyRequest) =>
+    req.method === "GET" && !req.url.startsWith("/api") && Boolean(req.headers.accept?.includes("text/html"));
   app.setNotFoundHandler((req, reply) =>
-    req.method === "GET" && !req.url.startsWith("/api") ? reply.sendFile("index.html") : reply.code(404).send({ error: "Not found" }),
+    isPageRequest(req) ? reply.sendFile("index.html") : reply.code(404).send({ error: "Not found" }),
   );
 }
 
