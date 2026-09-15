@@ -87,7 +87,6 @@ export function Board({ project }: { project: Project }) {
                             className="card"
                             data-status={task.status}
                             data-dragging={dragSnapshot.isDragging}
-                            data-blocked={task.status !== "done" && unresolvedBlockers(task, byId).length > 0}
                             onClick={() => setDialog({ kind: "task", task })}
                           >
                             <TaskCardContent task={task} byId={byId} tagsById={tagsById} blocks={blocksCount.get(task.id) ?? 0} />
@@ -134,15 +133,17 @@ function TaskCardContent({
   const tags = task.tags.flatMap((id) => tagsById.get(id) ?? []);
   return (
     <>
-      {tags.length > 0 && (
-        <div className="row gap-4 wrap">
-          {tags.map((tag) => (
-            <TagChip key={tag.id} tag={tag} small />
-          ))}
-        </div>
-      )}
-      <div className="card-title">{task.title}</div>
-      {task.description && <div className="card-desc">{task.description}</div>}
+      <div className="card-head">
+        <div className="card-title clamp-2" title={task.title}>{task.title}</div>
+        {tags.length > 0 && (
+          <div className="card-tags">
+            {tags.map((tag) => (
+              <TagChip key={tag.id} tag={tag} small />
+            ))}
+          </div>
+        )}
+      </div>
+      {task.description && <div className="card-desc clamp-2">{task.description}</div>}
       {(pending.length > 0 || blocks > 0) && (
         <div className="row gap-4 wrap">
           {pending.length > 0 && (

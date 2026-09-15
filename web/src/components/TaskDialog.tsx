@@ -1,6 +1,7 @@
 import { Lock, Tag as TagIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import Markdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import { reachesTask, STATUS_LABELS, TASK_STATUSES, type Tag, type Task, type TaskStatus } from "../../../shared/schemas";
 import { useCreateTag, useDeleteTask, useSaveTask, type TaskDraft } from "../hooks";
 import { ChipPicker } from "./ChipPicker";
@@ -95,7 +96,7 @@ export function TaskDialog({
         </div>
         {preview ? (
           <div className="markdown" onDoubleClick={() => setPreview(false)}>
-            {draft.description ? <Markdown>{draft.description}</Markdown> : <span className="text-secondary">Nothing to preview</span>}
+            {draft.description ? <Markdown remarkPlugins={[remarkBreaks]}>{draft.description}</Markdown> : <span className="text-secondary">Nothing to preview</span>}
           </div>
         ) : (
           <textarea

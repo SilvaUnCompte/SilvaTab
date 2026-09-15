@@ -74,6 +74,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .gap-16 { gap: 16px; }
 .center { display: grid; place-items: center; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .text-secondary { color: var(--text-secondary); }
 .text-danger { color: var(--danger); }
 .text-small { font-size: 12px; }
@@ -215,12 +216,12 @@ textarea.input { height: auto; padding: 8px; resize: vertical; font-family: var(
 }
 .card:hover { border-color: var(--border-strong); }
 .card[data-dragging="true"] { border-color: var(--accent); box-shadow: var(--shadow-popup); }
-.card[data-blocked="true"] { border-left: 3px solid var(--danger); }
-.card-title { font-weight: 600; overflow-wrap: anywhere; }
+.card-head { display: flex; align-items: flex-start; gap: 8px; }
+.card-title { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.card-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 50%; padding-top: 1px; }
 .card[data-status="done"] .card-title { color: var(--text-secondary); text-decoration: line-through; }
 .card-desc {
   color: var(--text-secondary); font-size: 12px; white-space: pre-line; overflow-wrap: anywhere;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
 /* ---------- Modal ---------- */
