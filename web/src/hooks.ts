@@ -1,6 +1,15 @@
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { TASK_STATUSES, type ProjectUpdateInput, type Task, type TagUpdateInput, type TaskMoveInput, type TaskStatus } from "../../shared/schemas";
+import {
+  TASK_STATUSES,
+  type Project,
+  type ProjectMoveInput,
+  type ProjectUpdateInput,
+  type Task,
+  type TagUpdateInput,
+  type TaskMoveInput,
+  type TaskStatus,
+} from "../../shared/schemas";
 import { api } from "./api";
 
 export const keys = {
@@ -23,6 +32,26 @@ function useInvalidatingMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TR
   });
 }
 
+/** Mutation applied to the cached `queryKey` data right away, rolled back if the request fails. */
+function useOptimisticMutation<TData, TArgs>(
+  queryKey: QueryKey,
+  mutationFn: (args: TArgs) => Promise<unknown>,
+  apply: (data: TData, args: TArgs) => TData,
+) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onMutate: async (args: TArgs) => {
+      await client.cancelQueries({ queryKey });
+      const previous = client.getQueryData<TData>(queryKey);
+      if (previous) client.setQueryData(queryKey, apply(previous, args));
+      return { previous };
+    },
+    onError: (_error, _args, context) => client.setQueryData(queryKey, context?.previous),
+    onSettled: () => client.invalidateQueries({ queryKey }),
+  });
+}
+
 // ---------- Session ----------
 
 export const useSession = () => useQuery({ queryKey: keys.session, queryFn: api.session });
@@ -42,6 +71,14 @@ export const useCreateProject = () => useInvalidatingMutation(api.createProject,
 /** Invalidating `keys.projects` also refreshes the archived list (same key prefix). */
 export const useUpdateProject = () =>
   useInvalidatingMutation(({ id, ...input }: ProjectUpdateInput & { id: string }) => api.updateProject(id, input), [keys.projects]);
+
+/** Reorders the sidebar without waiting for the server. */
+export const useMoveProject = () =>
+  useOptimisticMutation<Project[], ProjectMoveInput & { id: string }>(
+    keys.projects,
+    ({ id, ...input }) => api.moveProject(id, input),
+    (projects, { id, position }) => moveItem(projects, id, position),
+  );
 
 export const useDeleteProject = () => useInvalidatingMutation(api.deleteProject, [keys.projects]);
 
@@ -90,21 +127,12 @@ async function saveExistingTask(id: string, { status, ...fields }: TaskDraft) {
 export const useDeleteTask = (projectId: string) => useInvalidatingMutation(api.deleteTask, [keys.tasks(projectId)]);
 
 /** Moves a task with an optimistic update so the card does not jump back while the request runs. */
-export function useMoveTask(projectId: string) {
-  const client = useQueryClient();
-  const queryKey = keys.tasks(projectId);
-  return useMutation({
-    mutationFn: ({ id, ...input }: TaskMoveInput & { id: string }) => api.moveTask(id, input),
-    onMutate: async ({ id, status, position }) => {
-      await client.cancelQueries({ queryKey });
-      const previous = client.getQueryData<Task[]>(queryKey);
-      if (previous) client.setQueryData(queryKey, applyMove(previous, id, status, position ?? Infinity));
-      return { previous };
-    },
-    onError: (_error, _args, context) => client.setQueryData(queryKey, context?.previous),
-    onSettled: () => client.invalidateQueries({ queryKey }),
-  });
-}
+export const useMoveTask = (projectId: string) =>
+  useOptimisticMutation<Task[], TaskMoveInput & { id: string }>(
+    keys.tasks(projectId),
+    ({ id, ...input }) => api.moveTask(id, input),
+    (tasks, { id, status, position }) => applyMove(tasks, id, status, position ?? Infinity),
+  );
 
 // ---------- Pure helpers ----------
 
@@ -130,6 +158,15 @@ export function positionInColumn(column: Task[], visible: Task[], movedId: strin
   if (index < visibleOthers.length) return others.indexOf(visibleOthers[index]);
   const last = visibleOthers.at(-1);
   return last ? others.indexOf(last) + 1 : others.length;
+}
+
+/** Copy of `items` with the item `id` moved to `index`. */
+function moveItem<T extends { id: string }>(items: T[], id: string, index: number): T[] {
+  const moving = items.find((item) => item.id === id);
+  if (!moving) return items;
+  const rest = items.filter((item) => item.id !== id);
+  rest.splice(index, 0, moving);
+  return rest;
 }
 
 function applyMove(tasks: Task[], id: string, status: TaskStatus, position: number): Task[] {

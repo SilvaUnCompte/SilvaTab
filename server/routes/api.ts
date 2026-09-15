@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import {
   LoginInput,
   ProjectInput,
+  ProjectMoveInput,
   ProjectUpdateInput,
   TagCreateInput,
   TagUpdateInput,
@@ -44,6 +45,7 @@ export async function apiRoutes(app: FastifyInstance, { services, password }: { 
     secured.get<{ Querystring: { archived?: string } }>("/projects", (req) => projects.list(req.query.archived === "true"));
     secured.post("/projects", (req) => projects.create(ProjectInput.parse(req.body)));
     secured.patch<IdParams>("/projects/:id", (req) => projects.update(req.params.id, ProjectUpdateInput.parse(req.body)));
+    secured.post<IdParams>("/projects/:id/move", (req) => projects.move(req.params.id, ProjectMoveInput.parse(req.body)));
     secured.delete<IdParams>("/projects/:id", async (req, reply) => {
       await projects.delete(req.params.id);
       return reply.code(204).send();

@@ -130,6 +130,7 @@ GET    /api/session
 GET    /api/projects              ?archived=true
 POST   /api/projects              { name }
 PATCH  /api/projects/:id          { name?, archived? }
+POST   /api/projects/:id/move     { position }
 DELETE /api/projects/:id          (also deletes its tasks and tags)
 GET    /api/projects/:id/tags
 POST   /api/projects/:id/tags     { label, hue? }

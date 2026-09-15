@@ -10,6 +10,7 @@ import {
 import type { Db, TaskDoc } from "../db.js";
 import { AppError } from "../errors.js";
 import { toObjectId } from "./ids.js";
+import { reorderOperations } from "./ordering.js";
 import type { ProjectService } from "./projectService.js";
 import type { TagService } from "./tagService.js";
 
@@ -120,18 +121,8 @@ export class TaskService {
       .find({ projectId: task.projectId, status, _id: { $ne: task._id } }, { projection: { _id: 1 } })
       .sort({ position: 1 })
       .toArray();
-    const index = Math.min(position ?? column.length, column.length);
-    const orderedIds = column.map((t) => t._id);
-    orderedIds.splice(index, 0, task._id);
-
-    const now = new Date();
     await this.db.tasks.bulkWrite(
-      orderedIds.map((_id, i) => ({
-        updateOne: {
-          filter: { _id },
-          update: { $set: _id.equals(task._id) ? { position: i, status, updatedAt: now } : { position: i } },
-        },
-      })),
+      reorderOperations<TaskDoc>(column.map((t) => t._id), task._id, position, { status, updatedAt: new Date() }),
     );
     return this.get(id);
   }

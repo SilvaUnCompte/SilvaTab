@@ -1,6 +1,7 @@
 import type {
   Project,
   ProjectInput,
+  ProjectMoveInput,
   ProjectUpdateInput,
   Tag,
   TagCreateInput,
@@ -43,6 +44,7 @@ export const api = {
   listProjects: (archived = false) => request<Project[]>("GET", `/projects${archived ? "?archived=true" : ""}`),
   createProject: (input: ProjectInput) => request<Project>("POST", "/projects", input),
   updateProject: (id: string, input: ProjectUpdateInput) => request<Project>("PATCH", `/projects/${id}`, input),
+  moveProject: (id: string, input: ProjectMoveInput) => request<Project>("POST", `/projects/${id}/move`, input),
   deleteProject: (id: string) => request<void>("DELETE", `/projects/${id}`),
 
   listTags: (projectId: string) => request<Tag[]>("GET", `/projects/${projectId}/tags`),

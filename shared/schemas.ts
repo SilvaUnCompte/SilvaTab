@@ -18,6 +18,8 @@ export const ObjectIdString = z.string().regex(/^[a-f0-9]{24}$/i, "Invalid id");
 
 const idList = z.array(ObjectIdString);
 
+const Position = z.number().int().min(0);
+
 // ---------- Projects ----------
 
 export const ProjectInput = z.object({
@@ -29,6 +31,9 @@ export const ProjectUpdateInput = ProjectInput.partial().extend({
   archived: z.boolean().optional().describe("Archived projects are hidden from the sidebar and from MCP"),
 });
 export type ProjectUpdateInput = z.infer<typeof ProjectUpdateInput>;
+
+export const ProjectMoveInput = z.object({ position: Position.describe("0-based index in the project list") });
+export type ProjectMoveInput = z.infer<typeof ProjectMoveInput>;
 
 export interface Project {
   id: string;
@@ -91,7 +96,7 @@ export type TaskUpdateInput = z.infer<typeof TaskUpdateInput>;
 
 export const TaskMoveInput = z.object({
   status: TaskStatus.describe("Target column"),
-  position: z.number().int().min(0).optional().describe("0-based index in the target column, defaults to the end"),
+  position: Position.optional().describe("0-based index in the target column, defaults to the end"),
 });
 export type TaskMoveInput = z.infer<typeof TaskMoveInput>;
 

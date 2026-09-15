@@ -192,11 +192,12 @@ textarea.input { height: auto; padding: 8px; resize: vertical; font-family: var(
 
 .project-item {
   display: flex; align-items: center; gap: 10px;
-  width: 100%; height: 36px; padding: 0 6px 0 10px;
+  width: 100%; height: 36px; margin-bottom: 4px; padding: 0 6px 0 10px;
   border: none; border-radius: var(--radius); background: transparent; text-align: left; cursor: pointer;
 }
 .project-item:hover { background: var(--bg-hover); }
 .project-item[aria-current="true"] { background: var(--bg-selected); }
+.project-item[data-dragging="true"] { background: var(--bg-elevated); box-shadow: var(--shadow-popup); }
 .project-item .icon-btn { visibility: hidden; }
 .project-item:hover .icon-btn, .project-item[aria-current="true"] .icon-btn { visibility: visible; }
 

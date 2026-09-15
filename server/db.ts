@@ -8,6 +8,8 @@ export interface ProjectDoc {
   hue: number;
   /** Missing on projects created before archiving existed. */
   archived?: boolean;
+  /** Missing on projects created before reordering existed: they come first, by creation date. */
+  position?: number;
   createdAt: Date;
 }
 
@@ -42,6 +44,7 @@ export async function connectDb(url: string, dbName: string) {
   const projects = db.collection<ProjectDoc>("projects");
   const tasks = db.collection<TaskDoc>("tasks");
   const tags = db.collection<TagDoc>("tags");
+  await projects.createIndex({ position: 1, createdAt: 1 });
   await tasks.createIndex({ projectId: 1, status: 1, position: 1 });
   await tags.createIndex({ projectId: 1, key: 1 }, { unique: true });
   return { client, projects, tasks, tags };
