@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { TASK_STATUSES, type Task, type TagUpdateInput, type TaskMoveInput, type TaskStatus } from "../../shared/schemas";
+import { TASK_STATUSES, type ProjectUpdateInput, type Task, type TagUpdateInput, type TaskMoveInput, type TaskStatus } from "../../shared/schemas";
 import { api } from "./api";
 
 export const keys = {
   session: ["session"] as const,
   projects: ["projects"] as const,
+  archivedProjects: ["projects", "archived"] as const,
   tasks: (projectId: string) => ["tasks", projectId] as const,
   tags: (projectId: string) => ["tags", projectId] as const,
 };
@@ -32,12 +33,15 @@ export const useLogout = () => useInvalidatingMutation(() => api.logout(), [keys
 
 // ---------- Projects ----------
 
-export const useProjects = () => useQuery({ queryKey: keys.projects, queryFn: api.listProjects });
+export const useProjects = () => useQuery({ queryKey: keys.projects, queryFn: () => api.listProjects() });
+
+export const useArchivedProjects = () => useQuery({ queryKey: keys.archivedProjects, queryFn: () => api.listProjects(true) });
 
 export const useCreateProject = () => useInvalidatingMutation(api.createProject, [keys.projects]);
 
-export const useRenameProject = () =>
-  useInvalidatingMutation(({ id, name }: { id: string; name: string }) => api.renameProject(id, { name }), [keys.projects]);
+/** Invalidating `keys.projects` also refreshes the archived list (same key prefix). */
+export const useUpdateProject = () =>
+  useInvalidatingMutation(({ id, ...input }: ProjectUpdateInput & { id: string }) => api.updateProject(id, input), [keys.projects]);
 
 export const useDeleteProject = () => useInvalidatingMutation(api.deleteProject, [keys.projects]);
 

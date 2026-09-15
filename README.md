@@ -72,7 +72,7 @@ Endpoint: `POST /mcp` (Streamable HTTP, stateless). Authentication, either:
 
 | Tool | Description |
 |------|-------------|
-| `list_projects` | All projects |
+| `list_projects` | Active (non-archived) projects |
 | `create_project` | Create a project |
 | `list_tags` | Tags of a project |
 | `list_tasks` | Tasks of a project grouped by column, optional `status` / `tag` filters and `includeDescription` |
@@ -127,9 +127,9 @@ All routes except `/api/login` and `/api/session` require the session cookie.
 POST   /api/login                 { password }
 POST   /api/logout
 GET    /api/session
-GET    /api/projects
+GET    /api/projects              ?archived=true
 POST   /api/projects              { name }
-PATCH  /api/projects/:id          { name }
+PATCH  /api/projects/:id          { name?, archived? }
 DELETE /api/projects/:id          (also deletes its tasks and tags)
 GET    /api/projects/:id/tags
 POST   /api/projects/:id/tags     { label, hue? }

@@ -6,6 +6,8 @@ export interface ProjectDoc {
   name: string;
   initials: string;
   hue: number;
+  /** Missing on projects created before archiving existed. */
+  archived?: boolean;
   createdAt: Date;
 }
 

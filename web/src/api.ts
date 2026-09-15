@@ -1,6 +1,7 @@
 import type {
   Project,
   ProjectInput,
+  ProjectUpdateInput,
   Tag,
   TagCreateInput,
   TagUpdateInput,
@@ -39,9 +40,9 @@ export const api = {
   login: (password: string) => request<Session>("POST", "/login", { password }),
   logout: () => request<Session>("POST", "/logout"),
 
-  listProjects: () => request<Project[]>("GET", "/projects"),
+  listProjects: (archived = false) => request<Project[]>("GET", `/projects${archived ? "?archived=true" : ""}`),
   createProject: (input: ProjectInput) => request<Project>("POST", "/projects", input),
-  renameProject: (id: string, input: ProjectInput) => request<Project>("PATCH", `/projects/${id}`, input),
+  updateProject: (id: string, input: ProjectUpdateInput) => request<Project>("PATCH", `/projects/${id}`, input),
   deleteProject: (id: string) => request<void>("DELETE", `/projects/${id}`),
 
   listTags: (projectId: string) => request<Tag[]>("GET", `/projects/${projectId}/tags`),

@@ -186,6 +186,7 @@ textarea.input { height: auto; padding: 8px; resize: vertical; font-family: var(
 
 .sidebar { background: var(--bg-panel); border-right: 1px solid var(--bg-editor); min-height: 0; }
 .sidebar-header { height: 44px; padding: 0 8px 0 14px; border-bottom: 1px solid var(--border); }
+.sidebar-footer { height: 36px; padding: 0 14px; border-top: 1px solid var(--border); flex: none; }
 .brand { font-weight: 600; font-size: 14px; }
 .brand-mark { width: 20px; height: 20px; border-radius: 5px; background: linear-gradient(135deg, #3574f0, #5fad65); }
 

@@ -25,11 +25,17 @@ export const ProjectInput = z.object({
 });
 export type ProjectInput = z.infer<typeof ProjectInput>;
 
+export const ProjectUpdateInput = ProjectInput.partial().extend({
+  archived: z.boolean().optional().describe("Archived projects are hidden from the sidebar and from MCP"),
+});
+export type ProjectUpdateInput = z.infer<typeof ProjectUpdateInput>;
+
 export interface Project {
   id: string;
   name: string;
   initials: string;
   hue: number;
+  archived: boolean;
   createdAt: string;
 }
 

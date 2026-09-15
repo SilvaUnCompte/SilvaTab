@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { projectInitials, randomHue, type Project, type ProjectInput } from "../../shared/schemas.js";
+import { projectInitials, randomHue, type Project, type ProjectInput, type ProjectUpdateInput } from "../../shared/schemas.js";
 import type { Db, ProjectDoc } from "../db.js";
 import { AppError } from "../errors.js";
 import { toObjectId } from "./ids.js";
@@ -9,14 +9,15 @@ const toProject = (doc: ProjectDoc): Project => ({
   name: doc.name,
   initials: doc.initials,
   hue: doc.hue,
+  archived: doc.archived ?? false,
   createdAt: doc.createdAt.toISOString(),
 });
 
 export class ProjectService {
   constructor(private readonly db: Db) {}
 
-  async list(): Promise<Project[]> {
-    const docs = await this.db.projects.find().sort({ createdAt: 1 }).toArray();
+  async list(archived = false): Promise<Project[]> {
+    const docs = await this.db.projects.find({ archived: archived ? true : { $ne: true } }).sort({ createdAt: 1 }).toArray();
     return docs.map(toProject);
   }
 
@@ -38,12 +39,11 @@ export class ProjectService {
     return toProject(doc);
   }
 
-  async rename(id: string, { name }: ProjectInput): Promise<Project> {
-    const doc = await this.db.projects.findOneAndUpdate(
-      { _id: toObjectId(id) },
-      { $set: { name, initials: projectInitials(name) } },
-      { returnDocument: "after" },
-    );
+  async update(id: string, { name, archived }: ProjectUpdateInput): Promise<Project> {
+    const $set: Partial<ProjectDoc> = {};
+    if (name !== undefined) Object.assign($set, { name, initials: projectInitials(name) });
+    if (archived !== undefined) $set.archived = archived;
+    const doc = await this.db.projects.findOneAndUpdate({ _id: toObjectId(id) }, { $set }, { returnDocument: "after" });
     if (!doc) throw AppError.notFound("Project", id);
     return toProject(doc);
   }

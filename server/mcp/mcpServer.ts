@@ -90,7 +90,7 @@ export function createMcpServer({ projects, tags, tasks }: Services): McpServer 
     return (list: string[] = []) => list.map((label) => idsByKey.get(tagKey(label))!);
   }
 
-  tool("list_projects", "List all projects.", {}, () => projects.list(), READ_ONLY);
+  tool("list_projects", "List all active (non-archived) projects.", {}, () => projects.list(), READ_ONLY);
 
   tool("create_project", "Create a new project.", ProjectInput.shape, (input) => projects.create(input));
 

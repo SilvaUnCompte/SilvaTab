@@ -1,11 +1,12 @@
-import { LogOut, Plus, Settings } from "lucide-react";
+import { Archive, LogOut, Plus, Settings } from "lucide-react";
 import { useState } from "react";
 import type { Project } from "../../../shared/schemas";
 import { useLogout } from "../hooks";
+import { ArchiveDialog } from "./ArchiveDialog";
 import { ProjectDialog } from "./ProjectDialog";
 import { ProjectAvatar } from "./ui";
 
-type DialogState = { project?: Project } | null;
+type DialogState = { kind: "project"; project?: Project } | { kind: "archive" } | null;
 
 export function Sidebar({
   projects,
@@ -31,7 +32,7 @@ export function Sidebar({
 
       <div className="row" style={{ padding: "12px 8px 6px 14px" }}>
         <span className="text-label grow">Projects</span>
-        <button className="icon-btn" title="New project" onClick={() => setDialog({})}>
+        <button className="icon-btn" title="New project" onClick={() => setDialog({ kind: "project" })}>
           <Plus size={16} />
         </button>
       </div>
@@ -54,7 +55,7 @@ export function Sidebar({
               title="Project settings"
               onClick={(e) => {
                 e.stopPropagation();
-                setDialog({ project });
+                setDialog({ kind: "project", project });
               }}
             >
               <Settings size={14} />
@@ -64,7 +65,22 @@ export function Sidebar({
         {projects.length === 0 && <div className="empty text-small">No project yet</div>}
       </nav>
 
-      {dialog && (
+      <footer className="sidebar-footer row">
+        <button className="link-btn text-small" onClick={() => setDialog({ kind: "archive" })}>
+          <Archive size={13} /> Archive
+        </button>
+      </footer>
+
+      {dialog?.kind === "archive" && (
+        <ArchiveDialog
+          onClose={() => setDialog(null)}
+          onRestored={(id) => {
+            setDialog(null);
+            onSelect(id);
+          }}
+        />
+      )}
+      {dialog?.kind === "project" && (
         <ProjectDialog
           project={dialog.project}
           onClose={() => setDialog(null)}

@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import {
   LoginInput,
   ProjectInput,
+  ProjectUpdateInput,
   TagCreateInput,
   TagUpdateInput,
   TaskCreateInput,
@@ -40,9 +41,9 @@ export async function apiRoutes(app: FastifyInstance, { services, password }: { 
       if (!hasValidSession(req)) return reply.code(401).send({ error: "Unauthorized" });
     });
 
-    secured.get("/projects", () => projects.list());
+    secured.get<{ Querystring: { archived?: string } }>("/projects", (req) => projects.list(req.query.archived === "true"));
     secured.post("/projects", (req) => projects.create(ProjectInput.parse(req.body)));
-    secured.patch<IdParams>("/projects/:id", (req) => projects.rename(req.params.id, ProjectInput.parse(req.body)));
+    secured.patch<IdParams>("/projects/:id", (req) => projects.update(req.params.id, ProjectUpdateInput.parse(req.body)));
     secured.delete<IdParams>("/projects/:id", async (req, reply) => {
       await projects.delete(req.params.id);
       return reply.code(204).send();
