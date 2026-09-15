@@ -31,7 +31,9 @@ cp .env.example .env        # set SILVA_PASSWORD and MCP_TOKEN (openssl rand -he
 docker compose up -d --build
 ```
 
-Open `http://<host>:3000`. Data lives in the `mongo-data` volume.
+Open `http://localhost:3000` (set `BIND_ADDRESS=0.0.0.0` to reach it from the LAN). Data lives in the `mongo-data` volume.
+
+Server deployment (Debian + nginx + HTTPS): see [DEPLOY.md](DEPLOY.md).
 
 Put it behind a reverse proxy with HTTPS (Caddy, Traefik, nginx) as soon as it leaves your LAN: the session cookie becomes `Secure` automatically when the proxy sends `X-Forwarded-Proto: https`.
 
@@ -44,6 +46,7 @@ Put it behind a reverse proxy with HTTPS (Caddy, Traefik, nginx) as soon as it l
 | `MONGO_URL` | no | `mongodb://localhost:27017` | |
 | `MONGO_DB` | no | `silvas-tab` | |
 | `PORT` | no | `3000` | |
+| `BIND_ADDRESS` | no | `127.0.0.1` | Host interface of the published port (compose only). |
 
 ## Local development
 
