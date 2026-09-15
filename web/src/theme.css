@@ -120,8 +120,10 @@ button, input, textarea, select { font: inherit; color: inherit; }
   background: var(--bg-input); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   outline: none;
 }
-.input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus); }
+.input:focus, .search:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus); }
 textarea.input { height: auto; padding: 8px; resize: vertical; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; }
+.search { display: flex; align-items: center; gap: 6px; width: 200px; cursor: text; }
+.search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: none; background: none; outline: none; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 
 /* ---------- Tabs (segmented) ---------- */

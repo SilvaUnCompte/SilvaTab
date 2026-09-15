@@ -111,6 +111,23 @@ export function groupByStatus(tasks: Task[]): Record<TaskStatus, Task[]> {
   return columns;
 }
 
+export type TaskFilter = { query: string; tagId: string };
+
+export function matchesFilter(task: Task, { query, tagId }: TaskFilter): boolean {
+  const needle = query.trim().toLowerCase();
+  if (tagId && !task.tags.includes(tagId)) return false;
+  return !needle || `${task.title}\n${task.description}`.toLowerCase().includes(needle);
+}
+
+/** Converts a drop index in a filtered column (`visible`) into a position in the full `column`. */
+export function positionInColumn(column: Task[], visible: Task[], movedId: string, index: number): number {
+  const others = column.filter((t) => t.id !== movedId);
+  const visibleOthers = visible.filter((t) => t.id !== movedId);
+  if (index < visibleOthers.length) return others.indexOf(visibleOthers[index]);
+  const last = visibleOthers.at(-1);
+  return last ? others.indexOf(last) + 1 : others.length;
+}
+
 function applyMove(tasks: Task[], id: string, status: TaskStatus, position: number): Task[] {
   const moving = tasks.find((t) => t.id === id);
   if (!moving) return tasks;

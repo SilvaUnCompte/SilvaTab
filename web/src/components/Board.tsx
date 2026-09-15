@@ -1,5 +1,5 @@
 import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
-import { Link2, Lock, Plus, Tag as TagIcon } from "lucide-react";
+import { Link2, Lock, Plus, Search, Tag as TagIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   STATUS_LABELS,
@@ -10,7 +10,7 @@ import {
   type Tag,
   type Task,
 } from "../../../shared/schemas";
-import { groupByStatus, useMoveTask, useTags, useTasks } from "../hooks";
+import { groupByStatus, matchesFilter, positionInColumn, useMoveTask, useTags, useTasks, type TaskFilter } from "../hooks";
 import { TagsDialog } from "./TagsDialog";
 import { statusColor, TaskDialog } from "./TaskDialog";
 import { ErrorBanner, ProjectAvatar, TagChip } from "./ui";
@@ -20,6 +20,7 @@ type DialogState = { kind: "task"; task?: Task; status?: TaskStatus } | { kind: 
 export function Board({ project }: { project: Project }) {
   const [dragging, setDragging] = useState(false);
   const [dialog, setDialog] = useState<DialogState>(null);
+  const [filter, setFilter] = useState<TaskFilter>({ query: "", tagId: "" });
   // Pause polling while dragging or editing so the board does not change under the cursor.
   const paused = dragging || dialog !== null;
   const { data: tasks = [], error } = useTasks(project.id, paused);
@@ -28,7 +29,12 @@ export function Board({ project }: { project: Project }) {
 
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   const tagsById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
-  const columns = useMemo(() => groupByStatus(tasks), [tasks]);
+  // A deleted tag must not keep filtering the board.
+  const activeFilter = { ...filter, tagId: tagsById.has(filter.tagId) ? filter.tagId : "" };
+  const isFiltered = Boolean(activeFilter.query.trim() || activeFilter.tagId);
+  const visible = tasks.filter((t) => matchesFilter(t, activeFilter));
+  const allColumns = useMemo(() => groupByStatus(tasks), [tasks]);
+  const columns = groupByStatus(visible);
   const blocksCount = useMemo(() => {
     const counts = new Map<string, number>();
     for (const t of tasks) for (const id of t.blockedBy) counts.set(id, (counts.get(id) ?? 0) + 1);
@@ -39,7 +45,9 @@ export function Board({ project }: { project: Project }) {
     setDragging(false);
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-    move.mutate({ id: draggableId, status: TaskStatus.parse(destination.droppableId), position: destination.index });
+    const status = TaskStatus.parse(destination.droppableId);
+    const position = positionInColumn(allColumns[status], columns[status], draggableId, destination.index);
+    move.mutate({ id: draggableId, status, position });
   };
 
   return (
@@ -47,7 +55,30 @@ export function Board({ project }: { project: Project }) {
       <header className="toolbar row gap-12">
         <ProjectAvatar project={project} large />
         <h1 className="grow truncate" style={{ fontSize: 15, margin: 0 }}>{project.name}</h1>
-        <span className="text-secondary text-small">{tasks.length} tasks</span>
+        <label className="input search">
+          <Search size={13} className="text-secondary" />
+          <input
+            placeholder="Search tasks…"
+            value={filter.query}
+            onChange={(e) => setFilter({ ...filter, query: e.target.value })}
+            onKeyDown={(e) => e.key === "Escape" && setFilter({ ...filter, query: "" })}
+          />
+        </label>
+        <select
+          className="input"
+          style={{ width: 140 }}
+          title="Filter by tag"
+          value={activeFilter.tagId}
+          onChange={(e) => setFilter({ ...filter, tagId: e.target.value })}
+        >
+          <option value="">All tags</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>{tag.label}</option>
+          ))}
+        </select>
+        <span className="text-secondary text-small">
+          {isFiltered ? `${visible.length} / ${tasks.length}` : tasks.length} tasks
+        </span>
         <button className="link-btn text-small" title="Edit tags" onClick={() => setDialog({ kind: "tags" })}>
           <TagIcon size={12} /> {tags.length} tags
         </button>
