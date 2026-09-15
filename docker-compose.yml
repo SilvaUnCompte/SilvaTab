@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    image: silvas-tab:latest
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      SILVA_PASSWORD: ${SILVA_PASSWORD:?Set SILVA_PASSWORD in .env}
+      MCP_TOKEN: ${MCP_TOKEN:?Set MCP_TOKEN in .env}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongo-data:
