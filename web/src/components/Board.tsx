@@ -65,8 +65,7 @@ export function Board({ project }: { project: Project }) {
           />
         </label>
         <select
-          className="input"
-          style={{ width: 140 }}
+          className="input tag-filter"
           title="Filter by tag"
           value={activeFilter.tagId}
           onChange={(e) => setFilter({ ...filter, tagId: e.target.value })}
@@ -83,7 +82,8 @@ export function Board({ project }: { project: Project }) {
           <TagIcon size={12} /> {tags.length} tags
         </button>
         <button className="btn btn-primary" onClick={() => setDialog({ kind: "task" })}>
-          <Plus size={15} /> New task
+          <Plus size={15} /> <span className="hide-mobile">New task</span>
+
         </button>
       </header>
 
