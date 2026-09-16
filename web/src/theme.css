@@ -169,7 +169,9 @@ textarea.input { height: auto; padding: 8px; resize: vertical; font-family: var(
 }
 .swatch:hover { border-color: var(--text-secondary); }
 .swatch[aria-pressed="true"], .swatch[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px var(--text); }
-.palette { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0 6px 30px; }
+.palette { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0; }
+.palette-indent { padding-left: 30px; }
+
 
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 

@@ -1,8 +1,8 @@
 import { Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { TAG_HUES, type Tag, type Task } from "../../../shared/schemas";
+import type { Tag, Task } from "../../../shared/schemas";
 import { useDeleteTag, useUpdateTag } from "../hooks";
-import { ErrorBanner, Modal, pastelStyle } from "./ui";
+import { ErrorBanner, HuePalette, Modal, pastelStyle } from "./ui";
 
 /** Lists the project tags to rename, recolor or delete them. */
 export function TagsDialog({
@@ -94,21 +94,15 @@ function TagRow({
         </button>
       </div>
       {paletteOpen && (
-        <div className="palette">
-          {TAG_HUES.map((hue) => (
-            <button
-              key={hue}
-              className="swatch"
-              style={pastelStyle(hue)}
-              aria-pressed={hue === tag.hue}
-              aria-label={`Hue ${hue}`}
-              onClick={() => {
-                onUpdate({ hue });
-                setPaletteOpen(false);
-              }}
-            />
-          ))}
-        </div>
+        <HuePalette
+          className="palette-indent"
+          value={tag.hue}
+          onChange={(hue) => {
+            onUpdate({ hue });
+            setPaletteOpen(false);
+          }}
+        />
+
       )}
     </div>
   );

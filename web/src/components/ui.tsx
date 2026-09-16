@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect, type CSSProperties, type ReactNode } from "react";
-import type { Project, Tag } from "../../../shared/schemas";
+import { PALETTE_HUES, type Project, type Tag } from "../../../shared/schemas";
 
 export function Modal({
   title,
@@ -43,7 +43,35 @@ export const pastelStyle = (hue: number): CSSProperties => ({
   background: `hsl(${hue} 70% 84%)`,
 });
 
+/** Grid of pastel swatches to pick a hue from. */
+export function HuePalette({
+  value,
+  onChange,
+  className = "",
+}: {
+  value: number;
+  onChange: (hue: number) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`palette ${className}`}>
+      {PALETTE_HUES.map((hue) => (
+        <button
+          key={hue}
+          type="button"
+          className="swatch"
+          style={pastelStyle(hue)}
+          aria-pressed={hue === value}
+          aria-label={`Hue ${hue}`}
+          onClick={() => onChange(hue)}
+        />
+      ))}
+    </div>
+  );
+}
+
 /** Two-letter project badge. */
+
 export function ProjectAvatar({ project, large = false }: { project: Project; large?: boolean }) {
   return (
     <span className={`avatar ${large ? "avatar-lg" : ""}`} style={pastelStyle(project.hue)} aria-hidden>

@@ -44,13 +44,16 @@ export interface Project {
   createdAt: string;
 }
 
+// ---------- Colors ----------
+
+/** Pastel hues offered by the color pickers (tags and projects), one every 15°. */
+export const PALETTE_HUES = Array.from({ length: 24 }, (_, i) => i * 15);
+
+const Hue = z.number().int().min(0).max(359).describe("Color hue (0-359)");
+
 // ---------- Tags ----------
 
-/** Hues offered by the tag color picker. */
-export const TAG_HUES = [0, 25, 45, 90, 140, 170, 195, 215, 240, 270, 300, 330] as const;
-
 export const TagLabel = z.string().trim().min(1).max(40).describe("Tag label");
-const Hue = z.number().int().min(0).max(359).describe("Color hue (0-359)");
 
 export const TagCreateInput = z.object({ label: TagLabel, hue: Hue.optional() });
 export type TagCreateInput = z.infer<typeof TagCreateInput>;
@@ -117,7 +120,8 @@ export const LoginInput = z.object({ password: z.string().min(1) });
 
 // ---------- Helpers ----------
 
-export const randomHue = () => Math.floor(Math.random() * 360);
+export const randomHue = () => PALETTE_HUES[Math.floor(Math.random() * PALETTE_HUES.length)];
+
 
 /** Two-letter project badge: first letters of the first two words, or the first two letters. */
 export function projectInitials(name: string): string {

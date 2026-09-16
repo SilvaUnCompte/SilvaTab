@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { TAG_HUES, tagKey, type Tag, type TagCreateInput, type TagUpdateInput } from "../../shared/schemas.js";
+import { randomHue, tagKey, type Tag, type TagCreateInput, type TagUpdateInput } from "../../shared/schemas.js";
 import type { Db, TagDoc } from "../db.js";
 import { AppError } from "../errors.js";
 import { toObjectId } from "./ids.js";
@@ -12,9 +12,8 @@ const toTag = (doc: TagDoc): Tag => ({
   hue: doc.hue,
 });
 
-const randomTagHue = () => TAG_HUES[Math.floor(Math.random() * TAG_HUES.length)];
-
-export class TagService {
+export class
+ TagService {
   constructor(
     private readonly db: Db,
     private readonly projects: ProjectService,
@@ -34,7 +33,8 @@ export class TagService {
       projectId: projectOid,
       label,
       key: tagKey(label),
-      hue: hue ?? randomTagHue(),
+      hue: hue ?? randomHue()
+,
       createdAt: new Date(),
     };
     await this.db.tags.insertOne(doc);
