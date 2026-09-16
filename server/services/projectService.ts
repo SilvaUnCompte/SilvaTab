@@ -39,13 +39,13 @@ export class ProjectService {
     return toProject(doc);
   }
 
-  async create({ name }: ProjectInput): Promise<Project> {
+  async create({ name, hue }: ProjectInput): Promise<Project> {
     const last = await this.db.projects.findOne({}, { sort: { position: -1 }, projection: { position: 1 } });
     const doc: ProjectDoc = {
       _id: new ObjectId(),
       name,
       initials: projectInitials(name),
-      hue: randomHue(),
+      hue: hue ?? randomHue(),
       position: (last?.position ?? -1) + 1,
       createdAt: new Date(),
     };
@@ -53,10 +53,12 @@ export class ProjectService {
     return toProject(doc);
   }
 
-  async update(id: string, { name, archived }: ProjectUpdateInput): Promise<Project> {
+  async update(id: string, { name, hue, archived }: ProjectUpdateInput): Promise<Project> {
     const $set: Partial<ProjectDoc> = {};
     if (name !== undefined) Object.assign($set, { name, initials: projectInitials(name) });
+    if (hue !== undefined) $set.hue = hue;
     if (archived !== undefined) $set.archived = archived;
+
     const doc = await this.db.projects.findOneAndUpdate({ _id: toObjectId(id) }, { $set }, { returnDocument: "after" });
     if (!doc) throw AppError.notFound("Project", id);
     return toProject(doc);

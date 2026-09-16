@@ -20,10 +20,18 @@ const idList = z.array(ObjectIdString);
 
 const Position = z.number().int().min(0);
 
+// ---------- Colors ----------
+
+/** Pastel hues offered by the color pickers (tags and projects), one every 15°. */
+export const PALETTE_HUES = Array.from({ length: 24 }, (_, i) => i * 15);
+
+const Hue = z.number().int().min(0).max(359).describe("Color hue (0-359)");
+
 // ---------- Projects ----------
 
 export const ProjectInput = z.object({
   name: z.string().trim().min(1).max(80).describe("Project name"),
+  hue: Hue.optional(),
 });
 export type ProjectInput = z.infer<typeof ProjectInput>;
 
@@ -43,13 +51,6 @@ export interface Project {
   archived: boolean;
   createdAt: string;
 }
-
-// ---------- Colors ----------
-
-/** Pastel hues offered by the color pickers (tags and projects), one every 15°. */
-export const PALETTE_HUES = Array.from({ length: 24 }, (_, i) => i * 15);
-
-const Hue = z.number().int().min(0).max(359).describe("Color hue (0-359)");
 
 // ---------- Tags ----------
 
@@ -123,12 +124,18 @@ export const LoginInput = z.object({ password: z.string().min(1) });
 export const randomHue = () => PALETTE_HUES[Math.floor(Math.random() * PALETTE_HUES.length)];
 
 
-/** Two-letter project badge: first letters of the first two words, or the first two letters. */
+/**
+ * Two-letter project badge, by priority: first letters of the first two words ("Cold Planner" → CP),
+ * the first two capitals ("SilvaTab" → ST), or the first two letters ("resume" → RE).
+ */
 export function projectInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
-  const raw = words.length > 1 ? words[0][0] + words[1][0] : (words[0] ?? "").slice(0, 2);
+  const capitals = name.match(/\p{Lu}/gu) ?? [];
+  const raw =
+    words.length > 1 ? words[0][0] + words[1][0] : capitals.length > 1 ? capitals[0] + capitals[1] : (words[0] ?? "").slice(0, 2);
   return raw.toUpperCase();
 }
+
 
 /** True when `target` can be reached from `start` ids by following blocker edges. */
 export function reachesTask(start: string[], target: string, blockersOf: (id: string) => string[] | undefined): boolean {

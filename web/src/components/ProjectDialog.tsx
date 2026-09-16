@@ -1,10 +1,10 @@
 import { Archive } from "lucide-react";
 import { useState } from "react";
-import { projectInitials, type Project } from "../../../shared/schemas";
+import { projectInitials, randomHue, type Project } from "../../../shared/schemas";
 import { useCreateProject, useDeleteProject, useUpdateProject } from "../hooks";
-import { ErrorBanner, Modal, ProjectAvatar } from "./ui";
+import { ErrorBanner, HuePalette, Modal, ProjectAvatar } from "./ui";
 
-/** Creates a project, or renames/archives/deletes `project` when given. `onSaved(null)` means it left the list. */
+/** Creates a project, or renames/recolors/archives/deletes `project` when given. `onSaved(null)` means it left the list. */
 export function ProjectDialog({
   project,
   onClose,
@@ -15,6 +15,7 @@ export function ProjectDialog({
   onSaved: (project: Project | null) => void;
 }) {
   const [name, setName] = useState(project?.name ?? "");
+  const [hue, setHue] = useState(() => project?.hue ?? randomHue());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const create = useCreateProject();
   const update = useUpdateProject();
@@ -22,7 +23,7 @@ export function ProjectDialog({
   const pending = create.isPending || update.isPending || remove.isPending;
 
   const save = async () => {
-    const saved = project ? await update.mutateAsync({ id: project.id, name }) : await create.mutateAsync({ name });
+    const saved = project ? await update.mutateAsync({ id: project.id, name, hue }) : await create.mutateAsync({ name, hue });
     onSaved(saved);
   };
 
@@ -39,7 +40,7 @@ export function ProjectDialog({
     onSaved(null);
   };
 
-  const preview = { ...(project ?? { id: "", createdAt: "", hue: 210, archived: false }), name, initials: projectInitials(name) || "?" };
+  const preview = { id: "", createdAt: "", archived: false, name, hue, initials: projectInitials(name) || "?" };
 
   return (
     <Modal
@@ -76,6 +77,8 @@ export function ProjectDialog({
         <ProjectAvatar project={preview} large />
         <input className="input grow" autoFocus placeholder="Project name" value={name} onChange={(e) => setName(e.target.value)} />
       </form>
+      <HuePalette value={hue} onChange={setHue} />
+
       <ErrorBanner error={create.error ?? update.error ?? remove.error} />
     </Modal>
   );
