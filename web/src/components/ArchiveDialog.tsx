@@ -13,7 +13,7 @@ export function ArchiveDialog({ onClose, onRestored }: { onClose: () => void; on
   };
 
   return (
-    <Modal small title="Archived projects" onClose={onClose} footer={<><span className="grow" /><button className="btn" onClick={onClose}>Close</button></>}>
+    <Modal size="sm" title="Archived projects" onClose={onClose} footer={<><span className="grow" /><button className="btn" onClick={onClose}>Close</button></>}>
       {!isPending && projects.length === 0 && <div className="empty">No archived project</div>}
       <div className="col gap-4">
         {projects.map((project) => (

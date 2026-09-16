@@ -7,13 +7,13 @@ export function Modal({
   onClose,
   children,
   footer,
-  small = false,
+  size = "md",
 }: {
   title: ReactNode;
   onClose: () => void;
   children: ReactNode;
   footer: ReactNode;
-  small?: boolean;
+  size?: "sm" | "md" | "lg";
 }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
@@ -23,7 +23,8 @@ export function Modal({
 
   return (
     <div className="backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`modal ${small ? "modal-sm" : ""}`} role="dialog" aria-modal="true">
+      <div className={`modal modal-${size}`} role="dialog" aria-modal="true">
+
         <div className="modal-header row gap-8">
           <div className="grow truncate" style={{ fontWeight: 600 }}>{title}</div>
           <button className="icon-btn" onClick={onClose} aria-label="Close">

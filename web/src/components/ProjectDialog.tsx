@@ -44,7 +44,8 @@ export function ProjectDialog({
 
   return (
     <Modal
-      small
+      size="sm"
+
       title={project ? "Project settings" : "New project"}
       onClose={onClose}
       footer={

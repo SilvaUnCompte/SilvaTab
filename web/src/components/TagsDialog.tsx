@@ -25,7 +25,7 @@ export function TagsDialog({
   }, [tasks]);
 
   return (
-    <Modal small title="Tags" onClose={onClose} footer={<><span className="grow" /><button className="btn" onClick={onClose}>Close</button></>}>
+    <Modal size="sm" title="Tags" onClose={onClose} footer={<><span className="grow" /><button className="btn" onClick={onClose}>Close</button></>}>
       {tags.length === 0 && <div className="empty">No tag yet. Add tags from a task.</div>}
       <div className="col gap-4">
         {tags.map((tag) => (

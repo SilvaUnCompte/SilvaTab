@@ -1,3 +1,4 @@
+import { autoUpdate, flip, offset, size, useFloating } from "@floating-ui/react-dom";
 import { Plus, X } from "lucide-react";
 import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 
@@ -21,11 +22,37 @@ interface ChipPickerProps<T> {
 
 const normalize = (text: string) => text.trim().toLowerCase();
 
+const MAX_LIST_HEIGHT = 240;
+
+/**
+ * Fixed positioning lets the list overflow the scrolling modal body; it flips above the input
+ * when there is not enough room below and matches the input width.
+ */
+const floatingOptions = {
+  strategy: "fixed",
+  placement: "bottom-start",
+  whileElementsMounted: autoUpdate,
+  middleware: [
+    offset(4),
+    flip({ padding: 8 }),
+    size({
+      padding: 8,
+      apply({ rects, availableHeight, elements }) {
+        Object.assign(elements.floating.style, {
+          width: `${rects.reference.width}px`,
+          maxHeight: `${Math.min(MAX_LIST_HEIGHT, availableHeight)}px`,
+        });
+      },
+    }),
+  ],
+} satisfies Parameters<typeof useFloating>[0];
+
 /** Search field that picks items from a list and shows them as chips. */
 export function ChipPicker<T>(props: ChipPickerProps<T>) {
   const { label, placeholder, selected, options, getId, getText, onAdd, onRemove, onCreate } = props;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const { refs, floatingStyles } = useFloating(floatingOptions);
 
   const needle = normalize(query);
   const matches = options.filter((item) => normalize(getText(item)).includes(needle));
@@ -74,8 +101,9 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
           ))}
         </div>
       )}
-      <div className="picker-anchor">
+      <div>
         <input
+          ref={refs.setReference}
           className="input"
           placeholder={placeholder}
           value={query}
@@ -86,7 +114,8 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
         />
         {open && (matches.length > 0 || canCreate) && (
           // preventDefault keeps the focus in the input while clicking an option.
-          <div className="picker" onMouseDown={(e) => e.preventDefault()}>
+          <div ref={refs.setFloating} className="picker" style={floatingStyles} onMouseDown={(e) => e.preventDefault()}>
+
             {matches.map((item) => (
               <button key={getId(item)} type="button" className="picker-item" onClick={() => pick(item)}>
                 {props.renderOption(item)}

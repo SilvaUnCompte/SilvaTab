@@ -54,6 +54,7 @@ export function TaskDialog({
 
   return (
     <Modal
+      size="lg"
       title={task ? "Edit task" : "New task"}
       onClose={onClose}
       footer={
@@ -86,7 +87,7 @@ export function TaskDialog({
         </label>
       </div>
 
-      <div className="field">
+      <div className="field field-fill">
         <div className="row">
           <span className="text-label grow">Description</span>
           <div className="tabs" role="tablist">
@@ -139,13 +140,16 @@ function BlockersField({
 }) {
   const options = useMemo(
     () =>
-      tasks.filter(
-        (t) =>
-          t.id !== selfId &&
-          !value.includes(t.id) &&
-          // Hide tasks that already depend on this one: picking them would create a cycle.
-          !(selfId && reachesTask([t.id], selfId, (id) => byId.get(id)?.blockedBy)),
-      ),
+      tasks
+        .filter(
+          (t) =>
+            t.id !== selfId &&
+            !value.includes(t.id) &&
+            // Hide tasks that already depend on this one: picking them would create a cycle.
+            !(selfId && reachesTask([t.id], selfId, (id) => byId.get(id)?.blockedBy)),
+        )
+        .sort((a, b) => TASK_STATUSES.indexOf(a.status) - TASK_STATUSES.indexOf(b.status)),
+
     [tasks, selfId, value, byId],
   );
   const statusDot = (task: Task) => <span className="dot" style={{ background: statusColor(task.status) }} />;
