@@ -1,101 +1,89 @@
 # Silva's Tab
 
-Minimalist kanban board (TODO / On doing / Done) with a built-in **MCP server** so Claude can read and manage tasks.
+A minimalist kanban board for personal projects, that **Claude can read and update for you**.
 
 <img src="img/kanban.png" width="500">
 
-- Projects list on the left, kanban board on the right, drag & drop between columns
-- Tasks have a title, a Markdown description, **tags** and a list of **blocking tasks** (cycles are rejected, blocked cards get a red marker)
-- Tags belong to a project: created on the fly from the task dialog, renamed / recolored / deleted from the "N tags" button of the board header
-- No accounts: a single instance password for the UI, a separate token for MCP
-- One container + MongoDB
+## What you can do
+
+### Organize projects
+
+- Keep all projects in the left column, each with its own color and initials.
+- Reorder them by dragging the grip on the right of each project.
+- Archive the projects you don't work on anymore: they leave the list and come back in one click from the **Archive** button.
+
+### Track tasks
+
+- Three columns: **TODO**, **On doing** and **Done**. Drag & drop a card to move it.
+- Write the details of a task in Markdown (lists, headings, code…), with a live preview.
+- Say which tasks must be finished first with **Blocked by**: the card shows a red *Blocked by* badge until they are done.
 
 <img src="img/edit.png" width="500">
 
-## Stack
+### Tag and find
 
-| Part | Choice |
-|------|--------|
-| Server | Node 22, Fastify, official MongoDB driver |
-| Validation | Zod schemas in `shared/`, used by REST, MCP and the UI |
-| MCP | `@modelcontextprotocol/sdk`, stateless Streamable HTTP at `/mcp` |
-| Web | React, Vite, TanStack Query, `@hello-pangea/dnd`, `react-markdown`, lucide icons |
-| Design | JetBrains New UI dark tokens (`web/src/theme.css`) |
+- Add tags to tasks, created on the fly while typing.
+- Rename, recolor or delete them from the **tags** button of the board.
+- Search tasks by text and filter them by tag.
 
-```
-server/     Fastify app (routes, services, MCP)
-shared/     Zod schemas + helpers shared by server and web
-web/        React SPA
-```
+<img src="img/tags.png" width="500">
 
-## Deploy (Docker Compose)
+<img src="img/search.png" width="500">
+
+### Let Claude work with you
+
+Connect Claude to the board and just ask:
+
+- *"What's left to do on Website redesign?"*
+- *"Split this feature into tasks, with their dependencies."*
+- *"Take the next ticket in TODO and do it."*
+
+Claude can list projects and tasks, filter them by column or tag, create tasks (with tags and blockers), edit them and move them between columns. The board refreshes by itself, so its changes show up live.
+
+### On your phone too
+
+The layout adapts to small screens: swipe between columns, scroll the project list, open any task.
+
+<img src="img/mobile.png" width="250">
+
+## Installation
+
+Silva's Tab runs with Docker (one app container + MongoDB). It is protected by a single password, no account needed.
 
 ```bash
 cp .env.example .env        # set SILVA_PASSWORD and MCP_TOKEN (openssl rand -hex 32)
 docker compose up -d --build
 ```
 
-Open `http://localhost:3000` (set `BIND_ADDRESS=0.0.0.0` to reach it from the LAN). Data lives in the `mongo-data` volume.
-
-Server deployment (Debian + nginx + HTTPS): see [DEPLOY.md](DEPLOY.md).
-
-Put it behind a reverse proxy with HTTPS (Caddy, Traefik, nginx) as soon as it leaves your LAN: the session cookie becomes `Secure` automatically when the proxy sends `X-Forwarded-Proto: https`.
-
-### Environment variables
+Open `http://localhost:3000`. Set `BIND_ADDRESS=0.0.0.0` in `.env` to reach it from your local network.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `SILVA_PASSWORD` | yes | | Web UI password. Changing it logs everybody out. |
-| `MCP_TOKEN` | yes | | Token for MCP clients. |
+| `SILVA_PASSWORD` | yes | | Password of the web interface. Changing it logs everybody out. |
+| `MCP_TOKEN` | yes | | Secret used by Claude to connect. |
 | `MONGO_URL` | no | `mongodb://localhost:27017` | |
 | `MONGO_DB` | no | `silvas-tab` | |
 | `PORT` | no | `3000` | |
-| `BIND_ADDRESS` | no | `127.0.0.1` | Host interface of the published port (compose only). |
+| `BIND_ADDRESS` | no | `127.0.0.1` | Network interface the app listens on (Docker Compose only). |
 
-## Local development
+To put it online with HTTPS (Debian + nginx), follow [DEPLOY.md](DEPLOY.md).
 
-```bash
-npm install
-docker run -d -p 27017:27017 --name silva-mongo mongo:8
-cp .env.example .env
-npm run dev                 # API on :3000, UI on http://localhost:5173
-```
+> MongoDB 5+ needs a CPU with AVX. On older hardware or some virtual machines, use the `mongo:4.4` image.
 
-`npm run build && npm start` runs the production build.
+### Connect Claude
 
-## MCP
+The board exposes an MCP server at `/mcp`, authenticated with `MCP_TOKEN`.
 
-Endpoint: `POST /mcp` (Streamable HTTP, stateless). Authentication, either:
-
-- header `Authorization: Bearer <MCP_TOKEN>` (preferred)
-- query string `?token=<MCP_TOKEN>` for clients that cannot send headers (the token can end up in proxy logs)
-
-| Tool | Description |
-|------|-------------|
-| `list_projects` | Active (non-archived) projects |
-| `create_project` | Create a project |
-| `list_tags` | Tags of a project |
-| `list_tasks` | Tasks of a project grouped by column, optional `status` / `tag` filters and `includeDescription` |
-| `get_task` | One task with its full description, tags and resolved blockers |
-| `create_tasks` | Create 1..100 tasks; `blockedByIndexes` links to earlier items of the same call |
-| `update_task` | Change title, description (specs), tags and/or blockers |
-| `move_task` | Move to `todo` / `doing` / `done`, optional position |
-| `delete_task` | Delete a task |
-
-Tags are passed to MCP tools **by label** (case-insensitive); unknown labels are created with a random color.
-
-### Plug Claude in
-
-**Claude Code** (CLI):
+**Claude Code**
 
 ```bash
 claude mcp add --transport http silvas-tab https://tab.example.com/mcp \
   --header "Authorization: Bearer <MCP_TOKEN>"
 ```
 
-Add `--scope user` to make it available in every project.
+Add `--scope user` to use it in every project.
 
-**Claude Desktop / Cowork — local config** (works even if the server is only reachable from your machine or LAN). Edit `claude_desktop_config.json` (Settings → Developer → Edit Config), Node must be installed:
+**Claude Desktop / Cowork, local config** (works even when the board is only reachable from your machine or network). Edit `claude_desktop_config.json` (Settings → Developer → Edit Config), Node must be installed:
 
 ```json
 {
@@ -109,42 +97,21 @@ Add `--scope user` to make it available in every project.
 }
 ```
 
-`mcp-remote` needs `--allow-http` for a non-localhost `http://` URL. Restart Claude Desktop afterwards.
+Add `--allow-http` to the args for a non-localhost `http://` URL, then restart Claude Desktop.
 
-**claude.ai / Claude Desktop / Cowork — custom connector** (server must be reachable from the internet over HTTPS, since Anthropic's servers make the calls). Customize → Connectors → `+` → Add custom connector, URL:
+**claude.ai / Claude Desktop / Cowork, custom connector** (the board must be reachable from the internet over HTTPS). Customize → Connectors → `+` → Add custom connector, with the URL below and empty OAuth fields:
 
 ```
 https://tab.example.com/mcp?token=<MCP_TOKEN>
 ```
 
-Leave the OAuth fields empty.
+### Development
 
-## REST API
-
-All routes except `/api/login` and `/api/session` require the session cookie.
-
-```
-POST   /api/login                 { password }
-POST   /api/logout
-GET    /api/session
-GET    /api/projects              ?archived=true
-POST   /api/projects              { name }
-PATCH  /api/projects/:id          { name?, archived? }
-POST   /api/projects/:id/move     { position }
-DELETE /api/projects/:id          (also deletes its tasks and tags)
-GET    /api/projects/:id/tags
-POST   /api/projects/:id/tags     { label, hue? }
-PATCH  /api/tags/:id              { label?, hue? }
-DELETE /api/tags/:id              (also removes it from tasks)
-GET    /api/projects/:id/tasks    ?status=todo|doing|done
-POST   /api/projects/:id/tasks    { title, description?, status?, blockedBy?, tags? }
-PATCH  /api/tasks/:id             { title?, description?, blockedBy?, tags? }
-POST   /api/tasks/:id/move        { status, position? }
-DELETE /api/tasks/:id
-GET    /healthz
+```bash
+npm install
+docker run -d -p 27017:27017 --name silva-mongo mongo:8
+cp .env.example .env
+npm run dev                 # API on :3000, UI on http://localhost:5173
 ```
 
-## Notes
-
-- MongoDB 5+ requires a CPU with AVX. On older hardware or some virtual machines, use `mongo:4.4`.
-- The board refreshes every 4 seconds, so changes made by Claude show up without reloading.
+`npm run build && npm start` runs the production build.
