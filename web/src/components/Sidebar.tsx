@@ -1,5 +1,5 @@
 import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
-import { Archive, LogOut, Plus, Settings } from "lucide-react";
+import { Archive, GripVertical, LogOut, Plus, Settings } from "lucide-react";
 import { useState } from "react";
 import type { Project } from "../../../shared/schemas";
 import { useLogout, useMoveProject } from "../hooks";
@@ -53,7 +53,6 @@ export function Sidebar({
                     <div
                       ref={drag.innerRef}
                       {...drag.draggableProps}
-                      {...drag.dragHandleProps}
                       role="button"
                       tabIndex={0}
                       className="project-item"
@@ -74,6 +73,10 @@ export function Sidebar({
                       >
                         <Settings size={14} />
                       </button>
+                      {/* Only the handle starts a drag, so swiping the list elsewhere scrolls it (touch screens). */}
+                      <span {...drag.dragHandleProps} className="drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                        <GripVertical size={14} />
+                      </span>
                     </div>
                   )}
                 </Draggable>
