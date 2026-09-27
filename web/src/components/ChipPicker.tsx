@@ -1,6 +1,6 @@
 import { autoUpdate, flip, offset, size, useFloating } from "@floating-ui/react-dom";
 import { Plus, X } from "lucide-react";
-import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 
 interface ChipPickerProps<T> {
   label: ReactNode;
@@ -52,6 +52,7 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
   const { label, placeholder, selected, options, getId, getText, onAdd, onRemove, onCreate } = props;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const { refs, floatingStyles } = useFloating(floatingOptions);
 
   const needle = normalize(query);
@@ -59,9 +60,12 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
   const exists = [...selected, ...options].some((item) => normalize(getText(item)) === needle);
   const canCreate = Boolean(onCreate && needle && !exists);
 
+  /** Keeps the list open after a pick so several items can be added in a row. */
   const pick = (item: T) => {
     onAdd(item);
     setQuery("");
+    inputRef.current?.focus();
+    setOpen(true);
   };
 
   const create = async () => {
@@ -103,7 +107,10 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
       )}
       <div>
         <input
-          ref={refs.setReference}
+          ref={(el) => {
+            inputRef.current = el;
+            refs.setReference(el);
+          }}
           className="input"
           placeholder={placeholder}
           value={query}
