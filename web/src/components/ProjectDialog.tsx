@@ -52,7 +52,7 @@ export function ProjectDialog({
         <>
           {project && (
             <button className="btn btn-danger" onClick={destroy} disabled={pending}>
-              {confirmDelete ? "Click again to delete all tasks" : "Delete"}
+              {confirmDelete ? "Click again" : "Delete"}
             </button>
           )}
           {project && (
