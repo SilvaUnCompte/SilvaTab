@@ -18,6 +18,8 @@ interface ChipPickerProps<T> {
   onRemove: (item: T) => void;
   /** When set, a "Create" entry is offered if no item matches the search text exactly. */
   onCreate?: (text: string) => Promise<void>;
+  /** Closes the list after a pick instead of keeping it open for the next one. */
+  closeOnPick?: boolean;
 }
 
 const normalize = (text: string) => text.trim().toLowerCase();
@@ -49,7 +51,7 @@ const floatingOptions = {
 
 /** Search field that picks items from a list and shows them as chips. */
 export function ChipPicker<T>(props: ChipPickerProps<T>) {
-  const { label, placeholder, selected, options, getId, getText, onAdd, onRemove, onCreate } = props;
+  const { label, placeholder, selected, options, getId, getText, onAdd, onRemove, onCreate, closeOnPick } = props;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -60,10 +62,13 @@ export function ChipPicker<T>(props: ChipPickerProps<T>) {
   const exists = [...selected, ...options].some((item) => normalize(getText(item)) === needle);
   const canCreate = Boolean(onCreate && needle && !exists);
 
-  /** Keeps the list open after a pick so several items can be added in a row. */
   const pick = (item: T) => {
     onAdd(item);
     setQuery("");
+    if (closeOnPick) {
+      inputRef.current?.blur();
+      return;
+    }
     inputRef.current?.focus();
     setOpen(true);
   };

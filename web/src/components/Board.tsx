@@ -15,19 +15,30 @@ import { TagsDialog } from "./TagsDialog";
 import { statusColor, TaskDialog } from "./TaskDialog";
 import { ErrorBanner, ProjectAvatar, TagChip } from "./ui";
 
-type DialogState = { kind: "task"; task?: Task; status?: TaskStatus } | { kind: "tags" } | null;
+type DialogState = { kind: "newTask"; status?: TaskStatus } | { kind: "tags" } | null;
 
-export function Board({ project }: { project: Project }) {
+export function Board({
+  project,
+  openTaskId,
+  onOpenTask,
+  onCloseTask,
+}: {
+  project: Project;
+  openTaskId: string | null;
+  onOpenTask: (id: string) => void;
+  onCloseTask: () => void;
+}) {
   const [dragging, setDragging] = useState(false);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [filter, setFilter] = useState<TaskFilter>({ query: "", tagId: "" });
   // Pause polling while dragging or editing so the board does not change under the cursor.
-  const paused = dragging || dialog !== null;
+  const paused = dragging || dialog !== null || openTaskId !== null;
   const { data: tasks = [], error } = useTasks(project.id, paused);
   const { data: tags = [] } = useTags(project.id, paused);
   const move = useMoveTask(project.id);
 
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
+  const openTask = openTaskId ? byId.get(openTaskId) : undefined;
   const tagsById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
   // A deleted tag must not keep filtering the board.
   const activeFilter = { ...filter, tagId: tagsById.has(filter.tagId) ? filter.tagId : "" };
@@ -81,7 +92,7 @@ export function Board({ project }: { project: Project }) {
         <button className="link-btn text-small" title="Edit tags" onClick={() => setDialog({ kind: "tags" })}>
           <TagIcon size={12} /> {tags.length} tags
         </button>
-        <button className="btn btn-primary" onClick={() => setDialog({ kind: "task" })}>
+        <button className="btn btn-primary" onClick={() => setDialog({ kind: "newTask" })}>
           <Plus size={15} /> <span className="hide-mobile">New task</span>
 
         </button>
@@ -101,7 +112,7 @@ export function Board({ project }: { project: Project }) {
                 <span className="dot" style={{ background: statusColor(status) }} />
                 <span className="text-label">{STATUS_LABELS[status]}</span>
                 <span className="text-secondary text-small grow">{columns[status].length}</span>
-                <button className="icon-btn" title={`Add to ${STATUS_LABELS[status]}`} onClick={() => setDialog({ kind: "task", status })}>
+                <button className="icon-btn" title={`Add to ${STATUS_LABELS[status]}`} onClick={() => setDialog({ kind: "newTask", status })}>
                   <Plus size={15} />
                 </button>
               </div>
@@ -118,7 +129,7 @@ export function Board({ project }: { project: Project }) {
                             className="card"
                             data-status={task.status}
                             data-dragging={dragSnapshot.isDragging}
-                            onClick={() => setDialog({ kind: "task", task })}
+                            onClick={() => onOpenTask(task.id)}
                           >
                             <TaskCardContent task={task} byId={byId} tagsById={tagsById} blocks={blocksCount.get(task.id) ?? 0} />
                           </article>
@@ -134,15 +145,11 @@ export function Board({ project }: { project: Project }) {
         </div>
       </DragDropContext>
 
-      {dialog?.kind === "task" && (
-        <TaskDialog
-          projectId={project.id}
-          task={dialog.task}
-          defaultStatus={dialog.status}
-          tasks={tasks}
-          tags={tags}
-          onClose={() => setDialog(null)}
-        />
+      {dialog?.kind === "newTask" && (
+        <TaskDialog projectId={project.id} defaultStatus={dialog.status} tasks={tasks} tags={tags} onClose={() => setDialog(null)} />
+      )}
+      {openTask && (
+        <TaskDialog key={openTask.id} projectId={project.id} task={openTask} tasks={tasks} tags={tags} onClose={onCloseTask} />
       )}
       {dialog?.kind === "tags" && <TagsDialog projectId={project.id} tags={tags} tasks={tasks} onClose={() => setDialog(null)} />}
     </main>

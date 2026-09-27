@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Board } from "./components/Board";
 import { LoginScreen } from "./components/LoginScreen";
 import { Sidebar } from "./components/Sidebar";
-import { useHashState, useProjects, useSession } from "./hooks";
+import { useHashRoute, useProjects, useSession } from "./hooks";
 
 export function App() {
   const session = useSession();
@@ -12,7 +12,7 @@ export function App() {
 
 function Workspace() {
   const { data: projects = [], isPending } = useProjects();
-  const [selectedId, setSelectedId] = useHashState();
+  const { projectId: selectedId, taskId, selectProject: setSelectedId, openTask, closeTask } = useHashRoute();
   const selected = projects.find((p) => p.id === selectedId);
 
   // Fall back to the first project when nothing (or a deleted project) is selected.
@@ -24,7 +24,7 @@ function Workspace() {
     <div className="app">
       <Sidebar projects={projects} selectedId={selectedId} onSelect={setSelectedId} />
       {selected ? (
-        <Board key={selected.id} project={selected} />
+        <Board key={selected.id} project={selected} openTaskId={taskId} onOpenTask={openTask} onCloseTask={closeTask} />
       ) : (
         <main className="main">
           <div className="center grow text-secondary">{isPending ? "" : "Create a project to get started"}</div>

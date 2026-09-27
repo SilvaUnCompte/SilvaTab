@@ -172,6 +172,7 @@ function BlockersField({
       )}
       onAdd={(t) => onChange([...value, t.id])}
       onRemove={(t) => onChange(value.filter((id) => id !== t.id))}
+      closeOnPick
     />
   );
 }

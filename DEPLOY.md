@@ -194,7 +194,8 @@ sudo -u deploy ssh-keygen -t ed25519 -N "" -C github-deploy -f /home/deploy/.ssh
 sudo -u deploy cp /home/deploy/.ssh/id_ed25519.pub /home/deploy/.ssh/authorized_keys
 sudo cat /home/deploy/.ssh/id_ed25519          # -> secret SSH_KEY
 sudo rm /home/deploy/.ssh/id_ed25519*          # the private key now only lives in GitHub
-ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | cut -d' ' -f2   # -> secret SSH_FINGERPRINT
+# The Action's SSH client (Go) prefers the ECDSA host key over ed25519
+ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub | cut -d' ' -f2     # -> secret SSH_FINGERPRINT
 ```
 
 Then in GitHub → **Settings** → **Secrets and variables** → **Actions**, add:

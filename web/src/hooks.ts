@@ -178,18 +178,35 @@ function applyMove(tasks: Task[], id: string, status: TaskStatus, position: numb
   return tasks.map((t) => reordered.get(t.id) ?? t);
 }
 
-/** State mirrored in the URL hash, so a refresh keeps the selected project. */
-export function useHashState(): [string | null, (value: string | null) => void] {
-  const read = () => decodeURIComponent(window.location.hash.slice(1)) || null;
-  const [value, setValue] = useState(read);
+const readHash = () => window.location.hash.slice(1);
+
+/**
+ * Selection mirrored in the URL hash as `projectId/taskId`: a refresh keeps it, and opening a task
+ * pushes a history entry so the browser's Back button closes the task instead of leaving the app.
+ */
+export function useHashRoute() {
+  const [hash, setHash] = useState(readHash);
   useEffect(() => {
-    const onChange = () => setValue(read());
+    const onChange = () => setHash(readHash());
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
-  const update = useCallback((next: string | null) => {
-    history.replaceState(null, "", next ? `#${encodeURIComponent(next)}` : window.location.pathname);
-    setValue(next);
+  const [projectId = null, taskId = null] = hash ? hash.split("/") : [];
+
+  const go = useCallback((next: string, push = false) => {
+    const url = next ? `#${next}` : window.location.pathname;
+    if (push) history.pushState({ task: true }, "", url);
+    else history.replaceState(null, "", url);
+    setHash(next);
   }, []);
-  return [value, update];
+
+  const selectProject = useCallback((id: string | null) => go(id ?? ""), [go]);
+  const openTask = useCallback((id: string) => go(`${projectId}/${id}`, true), [go, projectId]);
+  // Popping our own entry keeps Forward from reopening the task; a task opened from a shared link has none to pop.
+  const closeTask = useCallback(() => {
+    if (history.state?.task) history.back();
+    else go(projectId ?? "");
+  }, [go, projectId]);
+
+  return { projectId, taskId, selectProject, openTask, closeTask };
 }
